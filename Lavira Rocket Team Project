@@ -1,0 +1,89 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_TEAMS 20
+#define MAX_MATCHES 380
+#define MAX_MATCHES_PER_DAY 8
+#define TIME_GAP 3
+#define START_DAY 1
+#define START_MONTH 1
+#define START_YEAR 2024
+
+typedef struct {
+    int homeTeam;
+    int awayTeam;
+    char date[11];
+    char time[6];
+} Match;
+
+void generateDateAndTime(int matchIndex, int day, char* date, char* time) {
+    int matchTimes[] = {12, 15, 18, 21};  // Match times during the day
+    int matchTime = matchTimes[matchIndex % 4];  // Cycle through 4 times
+    sprintf(time, "%02d:00", matchTime);
+
+    // Date format: day.month.year
+    sprintf(date, "%02d.%02d.%04d", day, START_MONTH, START_YEAR);
+}
+
+void generateFixture(int numTeams, Match* matches) {
+    int matchIndex = 0;
+    int day = START_DAY;
+    int weeklyMatches = 0;
+
+    // Each team plays home and away against every other team
+    for (int i = 1; i <= numTeams; i++) {
+        for (int j = i + 1; j <= numTeams; j++) {
+            // Home match
+            Match match;
+            match.homeTeam = i;
+            match.awayTeam = j;
+            generateDateAndTime(weeklyMatches, day, match.date, match.time);
+            matches[matchIndex++] = match;
+
+            // Away match
+            Match awayMatch;
+            awayMatch.homeTeam = j;
+            awayMatch.awayTeam = i;
+            generateDateAndTime(weeklyMatches + 1, day, awayMatch.date, awayMatch.time);
+            matches[matchIndex++] = awayMatch;
+
+            // Each team plays only once a week, move to next day after maximum matches per day
+            weeklyMatches += 2;
+            if (weeklyMatches >= MAX_MATCHES_PER_DAY) {
+                weeklyMatches = 0;
+                day++;  // Move to the next week
+            }
+        }
+    }
+}
+
+void printMatches(Match* matches, int numMatches) {
+    for (int i = 0; i < numMatches; i++) {
+        printf("Team %d vs Team %d - Date: %s Time: %s\n",
+               matches[i].homeTeam, matches[i].awayTeam, matches[i].date, matches[i].time);
+    }
+}
+
+int main() {
+    int numTeams;
+
+    // Get the number of teams
+    printf("Enter the number of teams (max 20): ");
+    scanf("%d", &numTeams);
+
+    if (numTeams > MAX_TEAMS || numTeams < 2) {
+        printf("The number of teams must be between 2 and %d.\n", MAX_TEAMS);
+        return 1;
+    }
+
+    Match matches[MAX_MATCHES];
+
+    // Generate the fixture
+    generateFixture(numTeams, matches);
+
+    // Print all matches
+    printMatches(matches, numTeams * (numTeams - 1));
+
+    return 0;
+} 
